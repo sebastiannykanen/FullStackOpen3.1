@@ -26,6 +26,8 @@ let persons = [
   },
 ];
 
+// mongodb+srv://sebastiannykanen:<password>@cluster0.qekdml0.mongodb.net/?retryWrites=true&w=majority
+
 const maxId = persons.length > 0 ? Math.max(...persons.map((n) => n.id)) : 0;
 
 var dateTime = new Date();
