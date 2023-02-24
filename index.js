@@ -1,38 +1,29 @@
+require("dotenv").config();
 const { response } = require("express");
 const express = require("express");
 const app = express();
 var morgan = require("morgan");
+const Person = require("./models/Person");
+const cors = require("cors");
 
-let persons = [
-  {
-    id: 1,
-    name: "Arto Hellas",
-    number: "040-123456",
-  },
-  {
-    id: 2,
-    name: "Ada Lovelace",
-    number: "050-123456",
-  },
-  {
-    id: 3,
-    name: "Dan Abramov",
-    number: "060-123456",
-  },
-  {
-    id: 4,
-    name: "Mary Poppendick",
-    number: "070-123456",
-  },
-];
+const requestLogger = (request, response, next) => {
+  console.log("Method:", request.method);
+  console.log("Path:  ", request.path);
+  console.log("Body:  ", request.body);
+  console.log("---");
+  next();
+};
 
-// mongodb+srv://sebastiannykanen:<password>@cluster0.qekdml0.mongodb.net/?retryWrites=true&w=majority
+const unknownEndpoint = (request, response) => {
+  response.status(404).send({ error: "unknown endpoint" });
+};
 
-const maxId = persons.length > 0 ? Math.max(...persons.map((n) => n.id)) : 0;
+app.use(cors());
+app.use(express.json());
+app.use(requestLogger);
+app.use(express.static("build"));
 
 var dateTime = new Date();
-
-console.log(maxId);
 
 app.get("/info", (req, res) => {
   res.send(
@@ -45,18 +36,15 @@ app.use(
 );
 
 app.get("/api/persons", (req, res) => {
-  res.json(persons);
+  Person.find({}).then((persons) => {
+    res.json(persons);
+  });
 });
 
 app.get("/api/persons/:id", (req, res) => {
-  const id = Number(req.params.id);
-  const person = persons.find((person) => person.id === id);
-  if (person) {
+  Person.findById(req.params.id).then((person) => {
     res.json(person);
-  } else {
-    res.status(404).end();
-  }
-  res.json(person);
+  });
 });
 
 app.use(express.json());
@@ -68,38 +56,40 @@ function checkName(persons, name) {
   }
 }
 
-app.post("/api/persons", (req, res) => {
-  const body = req.body;
+app.post("/api/persons", (request, response) => {
+  const body = request.body;
 
-  if (!body.name || !body.number) {
-    return res.status(400).json({
-      error: "missing input",
-    });
+  console.log(body);
+
+  if (body.name === undefined) {
+    return response.status(400).json({ error: "name missing" });
   }
 
-  if (checkName(persons, body.name)) {
-    return res.status(400).json({
-      error: "already in list",
-    });
+  if (body.number === undefined) {
+    return response.status(400).json({ error: "number missing" });
   }
 
-  const person = {
-    id: maxId + 1,
+  const person = new Person({
     name: body.name,
     number: body.number,
-  };
+  });
 
-  persons = persons.concat(person);
-  res.json(person);
+  person.save().then((savedPerson) => {
+    response.json(savedPerson);
+  });
 });
 
 app.delete("/api/persons/:id", (req, res) => {
-  const id = Number(req.params.id);
-  persons = persons.filter((person) => person.id !== id);
-  res.status(204).end();
+  Person.findByIdAndRemove(req.params.id)
+    .then((result) => {
+      res.status(204).end();
+    })
+    .catch((error) => next(error));
 });
 
 app.use(express.static("build"));
+
+app.use(unknownEndpoint);
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {

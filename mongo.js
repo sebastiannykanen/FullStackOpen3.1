@@ -45,3 +45,16 @@ if (process.argv.length < 4) {
     mongoose.connection.close();
   });
 }
+
+// 3.13: puhelinluettelo ja tietokanta, step1
+
+// Muuta backendin kaikkien puhelintietojen näyttämistä siten, että backend hakee näytettävät puhelintiedot tietokannasta.
+
+// Varmista, että frontend toimii muutosten jälkeen.
+
+// Tee tässä ja seuraavissa tehtävissä Mongoose-spesifinen koodi omaan moduuliinsa samaan tapaan kuin kohdassa Tietokantamäärittelyjen eriyttäminen moduuliksi.
+// 3.14: puhelinluettelo ja tietokanta, step2
+
+// Muuta backendiä siten, että uudet numerot tallennetaan tietokantaan. Varmista, että frontend toimii muutosten jälkeen.
+
+// Tässä vaiheessa voit olla välittämättä siitä, onko tietokannassa jo henkilöä, jolla on sama nimi kuin lisättävällä.
